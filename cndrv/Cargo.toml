@@ -1,0 +1,19 @@
+[package]
+name = "cndrv"
+description = "Safe Cambricon driver API."
+version = "0.1.0"
+edition = "2021"
+authors = ["YdrMaster <ydrml@hotmail.com>"]
+repository = "https://github.com/YdrMaster/cndrv.git"
+documentation = "https://docs.rs/cndrv"
+license = "MIT"
+readme = "README.md"
+keywords = ["cambricon", "mlu", "neuware", "cndrv", "cnrtc"]
+categories = ["hardware-support"]
+
+[dependencies]
+
+[build-dependencies]
+bindgen.workspace = true
+build-script-cfg.workspace = true
+search-neuware-tools = { path = "../search-neuware-tools" }

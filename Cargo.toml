@@ -1,0 +1,7 @@
+[workspace]
+members = ["cndrv", "search-neuware-tools"]
+resolver = "2"
+
+[workspace.dependencies]
+bindgen = "0.69"
+build-script-cfg = "0.0"

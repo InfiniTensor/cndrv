@@ -35,10 +35,10 @@ mod version;
 mod device;
 
 /// §4.5 Context Management
-// mod context;
+mod context;
 
 /// §4.6 Memory Management
-// mod memory;
+mod memory;
 
 /// §4.7 Queue Management
 // mod queue;
@@ -63,7 +63,6 @@ mod device;
 
 pub trait AsRaw {
     type Raw;
-
     /// # Safety
     ///
     /// The caller must ensure that the returned item is dropped before the original item.
@@ -75,5 +74,7 @@ pub fn init() {
     cndrv!(cnInit(0));
 }
 
+pub use context::{Context, ContextGuard};
 pub use device::Device;
+pub use memory::{memcpy_d2d, memcpy_d2h, memcpy_h2d, DevByte};
 pub use version::{driver_version, library_version, Version};

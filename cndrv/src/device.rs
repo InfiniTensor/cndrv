@@ -2,7 +2,7 @@
 use std::ffi::c_int;
 
 #[repr(transparent)]
-pub struct Device(cn::CNdev);
+pub struct Device(pub(crate) cn::CNdev);
 
 impl AsRaw for Device {
     type Raw = cn::CNdev;

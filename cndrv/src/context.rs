@@ -1,5 +1,5 @@
-﻿use crate::{bindings as cn, AsRaw, Device};
-use std::{ffi::c_uint, ptr::null_mut};
+﻿use crate::{bindings as cn, AsRaw, Device, ResourceWrapper};
+use std::{ffi::c_uint, marker::PhantomData, ptr::null_mut};
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Context {
@@ -74,24 +74,16 @@ impl Context {
     pub fn apply<T>(&self, f: impl FnOnce(&ContextGuard) -> T) -> T {
         f(&self.bound())
     }
-
-    #[inline]
-    pub fn check_eq(
-        a: &impl AsRaw<Raw = cn::CNcontext>,
-        b: &impl AsRaw<Raw = cn::CNcontext>,
-    ) -> bool {
-        unsafe { a.as_raw() == b.as_raw() }
-    }
 }
 
 #[repr(transparent)]
-pub struct ContextGuard<'a>(&'a Context);
+pub struct ContextGuard<'a>(cn::CNcontext, PhantomData<&'a ()>);
 
 impl Context {
     #[inline]
     fn bound(&self) -> ContextGuard {
         cndrv!(cnCtxSetCurrent(self.ctx));
-        ContextGuard(self)
+        ContextGuard(self.ctx, PhantomData)
     }
 }
 
@@ -104,7 +96,7 @@ impl Drop for ContextGuard<'_> {
                 cndrv!(cnCtxGetCurrent(&mut current));
                 current
             },
-            self.0.ctx
+            self.0
         );
         cndrv!(cnCtxSetCurrent(null_mut()));
     }
@@ -114,19 +106,26 @@ impl AsRaw for ContextGuard<'_> {
     type Raw = cn::CNcontext;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.ctx
+        self.0
     }
 }
 
 impl ContextGuard<'_> {
     #[inline]
     pub fn dev(&self) -> Device {
-        Device(self.0.dev)
+        let mut dev = 0;
+        cndrv!(cnCtxGetDevice(&mut dev));
+        Device(dev)
     }
 
     #[inline]
     pub fn synchronize(&self) {
         cndrv!(cnCtxSync());
+    }
+
+    #[inline]
+    pub unsafe fn wrap_resource<T>(&self, res: T) -> ResourceWrapper<T> {
+        ResourceWrapper { ctx: self.0, res }
     }
 }
 

@@ -28,6 +28,8 @@ pub mod bindings {
     }
 }
 
+mod spore;
+
 /// §4.3 Version Management
 mod version;
 
@@ -41,10 +43,10 @@ mod context;
 mod memory;
 
 /// §4.7 Queue Management
-// mod queue;
+mod queue;
 
 /// §4.8 Notifier Management
-// mod notifier;
+mod notifier;
 
 /// §4.9 Atomic Operation Management
 // mod atomic;
@@ -77,4 +79,12 @@ pub fn init() {
 pub use context::{Context, ContextGuard};
 pub use device::Device;
 pub use memory::{memcpy_d2d, memcpy_d2h, memcpy_h2d, DevByte};
+pub use notifier::{Notifier, NotifierSpore};
+pub use queue::{Queue, QueueSpore};
+pub use spore::{ContextResource, ContextSpore, ResourceWrapper};
 pub use version::{driver_version, library_version, Version};
+
+struct Blob<P> {
+    ptr: P,
+    len: usize,
+}

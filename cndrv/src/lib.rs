@@ -1,4 +1,6 @@
-﻿#![cfg(detected_neuware)]
+﻿#![doc = include_str!("../README.md")]
+#![cfg(detected_neuware)]
+#![deny(warnings)]
 
 #[macro_use]
 #[allow(unused, non_upper_case_globals, non_camel_case_types, non_snake_case)]
@@ -85,7 +87,7 @@ pub use device::Device;
 pub use memory::{memcpy_d2d, memcpy_d2h, memcpy_h2d, DevByte, DevMem, DevMemSpore};
 pub use notifier::{Notifier, NotifierSpore};
 pub use queue::{Queue, QueueSpore};
-pub use spore::{ContextResource, ContextSpore, ResourceWrapper};
+pub use spore::{ContextResource, ContextSpore, RawContainer};
 pub use version::{driver_version, library_version, Version};
 
 struct Blob<P> {

@@ -69,10 +69,7 @@ impl ContextGuard<'_> {
         let len = Layout::array::<T>(len).unwrap().size();
         let mut ptr = 0;
         cndrv!(cnMalloc(&mut ptr, len as _));
-        DevMem(
-            unsafe { self.wrap_resource(Blob { ptr, len }) },
-            PhantomData,
-        )
+        DevMem(unsafe { self.wrap_raw(Blob { ptr, len }) }, PhantomData)
     }
 
     pub fn from_host<T: Copy>(&self, slice: &[T]) -> DevMem<'_> {
@@ -81,17 +78,14 @@ impl ContextGuard<'_> {
         let mut ptr = 0;
         cndrv!(cnMalloc(&mut ptr, len as _));
         cndrv!(cnMemcpyHtoD(ptr, src, len as _));
-        DevMem(
-            unsafe { self.wrap_resource(Blob { ptr, len }) },
-            PhantomData,
-        )
+        DevMem(unsafe { self.wrap_raw(Blob { ptr, len }) }, PhantomData)
     }
 }
 
 impl Drop for DevMem<'_> {
     #[inline]
     fn drop(&mut self) {
-        cndrv!(cnFree(self.0.res.ptr));
+        cndrv!(cnFree(self.0.raw.ptr));
     }
 }
 
@@ -99,10 +93,10 @@ impl Deref for DevMem<'_> {
     type Target = [DevByte];
     #[inline]
     fn deref(&self) -> &Self::Target {
-        if self.0.res.len == 0 {
+        if self.0.raw.len == 0 {
             &[]
         } else {
-            unsafe { from_raw_parts(self.0.res.ptr as _, self.0.res.len) }
+            unsafe { from_raw_parts(self.0.raw.ptr as _, self.0.raw.len) }
         }
     }
 }
@@ -110,10 +104,10 @@ impl Deref for DevMem<'_> {
 impl DerefMut for DevMem<'_> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        if self.0.res.len == 0 {
+        if self.0.raw.len == 0 {
             &mut []
         } else {
-            unsafe { from_raw_parts_mut(self.0.res.ptr as _, self.0.res.len) }
+            unsafe { from_raw_parts_mut(self.0.raw.ptr as _, self.0.raw.len) }
         }
     }
 }
@@ -122,19 +116,19 @@ impl AsRaw for DevMemSpore {
     type Raw = CNaddr;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.res.ptr
+        self.0.raw.ptr
     }
 }
 
 impl DevMemSpore {
     #[inline]
     pub const fn len(&self) -> usize {
-        self.0.res.len
+        self.0.raw.len
     }
 
     #[inline]
     pub const fn is_empty(&self) -> bool {
-        self.0.res.len == 0
+        self.0.raw.len == 0
     }
 }
 
@@ -145,17 +139,14 @@ impl<'ctx> ContextGuard<'ctx> {
         let len = Layout::array::<T>(len).unwrap().size();
         let mut ptr = null_mut();
         cndrv!(cnMallocHost(&mut ptr, len as _));
-        HostMem(
-            unsafe { self.wrap_resource(Blob { ptr, len }) },
-            PhantomData,
-        )
+        HostMem(unsafe { self.wrap_raw(Blob { ptr, len }) }, PhantomData)
     }
 }
 
 impl Drop for HostMem<'_> {
     #[inline]
     fn drop(&mut self) {
-        cndrv!(cnFreeHost(self.0.res.ptr));
+        cndrv!(cnFreeHost(self.0.raw.ptr));
     }
 }
 
@@ -163,7 +154,7 @@ impl AsRaw for HostMem<'_> {
     type Raw = *mut c_void;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.res.ptr
+        self.0.raw.ptr
     }
 }
 
@@ -172,14 +163,14 @@ impl Deref for HostMem<'_> {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { from_raw_parts(self.0.res.ptr.cast(), self.0.res.len) }
+        unsafe { from_raw_parts(self.0.raw.ptr.cast(), self.0.raw.len) }
     }
 }
 
 impl DerefMut for HostMem<'_> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { from_raw_parts_mut(self.0.res.ptr.cast(), self.0.res.len) }
+        unsafe { from_raw_parts_mut(self.0.raw.ptr.cast(), self.0.raw.len) }
     }
 }
 
@@ -188,14 +179,14 @@ impl Deref for HostMemSpore {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { from_raw_parts(self.0.res.ptr.cast(), self.0.res.len) }
+        unsafe { from_raw_parts(self.0.raw.ptr.cast(), self.0.raw.len) }
     }
 }
 
 impl DerefMut for HostMemSpore {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { from_raw_parts_mut(self.0.res.ptr.cast(), self.0.res.len) }
+        unsafe { from_raw_parts_mut(self.0.raw.ptr.cast(), self.0.raw.len) }
     }
 }
 

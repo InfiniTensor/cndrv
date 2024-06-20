@@ -11,14 +11,14 @@ impl<'ctx> Queue<'ctx> {
             CNNotifierFlags::CN_NOTIFIER_DEFAULT as _
         ));
         cndrv!(cnPlaceNotifier(event, self.as_raw()));
-        Notifier(unsafe { self.ctx().wrap_resource(event) }, PhantomData)
+        Notifier(unsafe { self.ctx().wrap_raw(event) }, PhantomData)
     }
 }
 
 impl Drop for Notifier<'_> {
     #[inline]
     fn drop(&mut self) {
-        cndrv!(cnDestroyNotifier(self.0.res));
+        cndrv!(cnDestroyNotifier(self.0.raw));
     }
 }
 
@@ -26,7 +26,7 @@ impl AsRaw for Notifier<'_> {
     type Raw = CNnotifier;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.res
+        self.0.raw
     }
 }
 
@@ -48,13 +48,13 @@ impl Queue<'_> {
 impl Notifier<'_> {
     #[inline]
     pub fn synchronize(&self) {
-        cndrv!(cnWaitNotifier(self.0.res));
+        cndrv!(cnWaitNotifier(self.0.raw));
     }
 
     #[inline]
     pub fn elapse_from(&self, start: &Self) -> Duration {
         let mut ms = 0.0;
-        cndrv!(cnNotifierElapsedTime(&mut ms, start.0.res, self.0.res));
+        cndrv!(cnNotifierElapsedTime(&mut ms, start.0.raw, self.0.raw));
         Duration::from_secs_f32(ms * 1e-3)
     }
 }

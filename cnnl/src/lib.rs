@@ -19,5 +19,9 @@ pub mod bindings {
 }
 
 mod handle;
+mod tensor;
+mod version;
 
 pub use handle::{Cnnl, CnnlSpore};
+pub use tensor::Tensor;
+pub use version::Version;

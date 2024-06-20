@@ -32,3 +32,18 @@ impl<'ctx> Cnnl<'ctx> {
         cnnl!(cnnlSetQueue(self.0.raw, queue.as_raw().cast()));
     }
 }
+
+#[test]
+fn test() {
+    cndrv::init();
+
+    let Some(dev) = cndrv::Device::fetch() else {
+        return;
+    };
+
+    dev.acquire_shared().apply(|ctx| {
+        let _cnnl = Cnnl::new(&ctx);
+    });
+
+    println!("test passed");
+}

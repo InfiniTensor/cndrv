@@ -1,0 +1,20 @@
+[package]
+name = "cnnl"
+description = "Safe Cambricon cnnl API."
+version = "0.0.0"
+edition = "2021"
+authors = ["YdrMaster <ydrml@hotmail.com>"]
+repository = "https://github.com/YdrMaster/cndrv.git"
+documentation = "https://docs.rs/cnnl"
+license = "MIT"
+readme = "README.md"
+keywords = ["cambricon", "mlu", "neuware", "cnnl"]
+categories = ["hardware-support"]
+
+[dependencies]
+cndrv = { version = "0.0", path = "../cndrv" }
+
+[build-dependencies]
+bindgen.workspace = true
+build-script-cfg.workspace = true
+search-neuware-tools = { version = "0.0.0", path = "../search-neuware-tools" }

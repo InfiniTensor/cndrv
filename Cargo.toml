@@ -1,5 +1,5 @@
 [workspace]
-members = ["cndrv", "search-neuware-tools"]
+members = ["cndrv", "cnnl", "search-neuware-tools"]
 resolver = "2"
 
 [workspace.dependencies]

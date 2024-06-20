@@ -1,7 +1,7 @@
-﻿use crate::{bindings as cn, impl_spore, AsRaw, Queue};
+﻿use crate::{bindings::CNnotifier, impl_spore, AsRaw, Queue};
 use std::{marker::PhantomData, ptr::null_mut, time::Duration};
 
-impl_spore!(Notifier and NotifierSpore by cn::CNnotifier);
+impl_spore!(Notifier and NotifierSpore by CNnotifier);
 
 impl<'ctx> Queue<'ctx> {
     pub fn record(&self) -> Notifier<'ctx> {
@@ -23,7 +23,7 @@ impl Drop for Notifier<'_> {
 }
 
 impl AsRaw for Notifier<'_> {
-    type Raw = cn::CNnotifier;
+    type Raw = CNnotifier;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
         self.0.res

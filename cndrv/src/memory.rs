@@ -1,4 +1,4 @@
-﻿use crate::{bindings as cn, impl_spore, AsRaw, Blob, ContextGuard, Queue};
+﻿use crate::{bindings::CNaddr, impl_spore, AsRaw, Blob, ContextGuard, Queue};
 use std::{
     alloc::Layout,
     ffi::c_void,
@@ -62,7 +62,7 @@ impl Queue<'_> {
     }
 }
 
-impl_spore!(DevMem and DevMemSpore by Blob<cn::CNaddr>);
+impl_spore!(DevMem and DevMemSpore by Blob<CNaddr>);
 
 impl ContextGuard<'_> {
     pub fn malloc<T: Copy>(&self, len: usize) -> DevMem<'_> {
@@ -119,7 +119,7 @@ impl DerefMut for DevMem<'_> {
 }
 
 impl AsRaw for DevMemSpore {
-    type Raw = cn::CNaddr;
+    type Raw = CNaddr;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
         self.0.res.ptr

@@ -1,11 +1,11 @@
-﻿use crate::{bindings as cn, AsRaw};
+﻿use crate::{bindings::CNdev, AsRaw};
 use std::ffi::c_int;
 
 #[repr(transparent)]
-pub struct Device(pub(crate) cn::CNdev);
+pub struct Device(pub(crate) CNdev);
 
 impl AsRaw for Device {
-    type Raw = cn::CNdev;
+    type Raw = CNdev;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
         self.0
@@ -41,6 +41,17 @@ impl Device {
         let mut bytes = 0;
         cndrv!(cnDeviceTotalMem(&mut bytes, self.0));
         bytes as _
+    }
+
+    #[inline]
+    pub fn isa(&self) -> c_int {
+        let mut isa = 0;
+        cndrv!(cnDeviceGetAttribute(
+            &mut isa,
+            CNdevice_attribute::CN_DEVICE_ATTRIBUTE_MLU_ISA_VERSION,
+            self.0,
+        ));
+        isa
     }
 }
 

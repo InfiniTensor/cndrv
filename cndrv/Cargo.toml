@@ -12,6 +12,7 @@ keywords = ["cambricon", "mlu", "neuware", "cndrv", "cnrtc"]
 categories = ["hardware-support"]
 
 [dependencies]
+log = "0.4"
 
 [build-dependencies]
 bindgen.workspace = true

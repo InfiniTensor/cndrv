@@ -1,4 +1,4 @@
-﻿use crate::{bindings as cn, ContextGuard};
+﻿use crate::{bindings::CNcontext, ContextGuard};
 
 pub trait ContextResource<'ctx> {
     type Spore: ContextSpore<Resource<'ctx> = Self>;
@@ -29,7 +29,7 @@ macro_rules! spore_convention {
 }
 
 pub struct ResourceWrapper<T> {
-    pub ctx: cn::CNcontext,
+    pub ctx: CNcontext,
     pub res: T,
 }
 

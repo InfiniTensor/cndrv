@@ -1,7 +1,7 @@
-﻿use crate::{bindings as cn, impl_spore, AsRaw, ContextGuard};
+﻿use crate::{bindings::CNqueue, impl_spore, AsRaw, ContextGuard};
 use std::{marker::PhantomData, ptr::null_mut};
 
-impl_spore!(Queue and QueueSpore by cn::CNqueue);
+impl_spore!(Queue and QueueSpore by CNqueue);
 
 impl ContextGuard<'_> {
     #[inline]
@@ -21,7 +21,7 @@ impl Drop for Queue<'_> {
 }
 
 impl AsRaw for Queue<'_> {
-    type Raw = cn::CNqueue;
+    type Raw = CNqueue;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
         self.0.res

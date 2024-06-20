@@ -82,7 +82,7 @@ pub fn init() {
 pub use cnrtc::CnrtcBinary;
 pub use context::{Context, ContextGuard};
 pub use device::Device;
-pub use memory::{memcpy_d2d, memcpy_d2h, memcpy_h2d, DevByte};
+pub use memory::{memcpy_d2d, memcpy_d2h, memcpy_h2d, DevByte, DevMem, DevMemSpore};
 pub use notifier::{Notifier, NotifierSpore};
 pub use queue::{Queue, QueueSpore};
 pub use spore::{ContextResource, ContextSpore, ResourceWrapper};

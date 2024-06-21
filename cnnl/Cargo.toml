@@ -13,6 +13,7 @@ categories = ["hardware-support"]
 
 [dependencies]
 cndrv = { version = "0.0", path = "../cndrv" }
+digit-layout = "0.0"
 
 [build-dependencies]
 bindgen.workspace = true

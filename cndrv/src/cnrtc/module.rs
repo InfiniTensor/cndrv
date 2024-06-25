@@ -1,9 +1,9 @@
-﻿use crate::{bindings::CNmodule, impl_spore, AsRaw, CnrtcBinary, ContextGuard};
+﻿use crate::{bindings::CNmodule, impl_spore, AsRaw, CnrtcBinary, CurrentCtx};
 use std::{marker::PhantomData, ptr::null_mut};
 
 impl_spore!(Module and ModuleSpore by CNmodule);
 
-impl ContextGuard<'_> {
+impl CurrentCtx {
     #[inline]
     pub fn load(&self, bin: CnrtcBinary) -> Module {
         let mut module = null_mut();

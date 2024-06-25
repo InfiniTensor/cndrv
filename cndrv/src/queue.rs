@@ -1,9 +1,9 @@
-﻿use crate::{bindings::CNqueue, impl_spore, AsRaw, ContextGuard};
+﻿use crate::{bindings::CNqueue, impl_spore, AsRaw, CurrentCtx};
 use std::{marker::PhantomData, ptr::null_mut};
 
 impl_spore!(Queue and QueueSpore by CNqueue);
 
-impl ContextGuard<'_> {
+impl CurrentCtx {
     #[inline]
     pub fn queue(&self) -> Queue {
         let mut queue = null_mut();
@@ -32,12 +32,5 @@ impl Queue<'_> {
     #[inline]
     pub fn synchronize(&self) {
         cndrv!(cnQueueSync(self.0.raw));
-    }
-}
-
-impl<'ctx> Queue<'ctx> {
-    #[inline]
-    pub fn ctx(&self) -> &ContextGuard<'ctx> {
-        unsafe { std::mem::transmute(&self.0.ctx) }
     }
 }

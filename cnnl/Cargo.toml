@@ -12,10 +12,10 @@ keywords = ["cambricon", "mlu", "neuware", "cnnl"]
 categories = ["hardware-support"]
 
 [dependencies]
-cndrv = { version = "0.0", path = "../cndrv" }
+cndrv = { version = "0.1", path = "../cndrv" }
 digit-layout = "0.0"
 
 [build-dependencies]
 bindgen.workspace = true
 build-script-cfg.workspace = true
-search-neuware-tools = { version = "0.0.0", path = "../search-neuware-tools" }
+search-neuware-tools = { version = "0.0", path = "../search-neuware-tools" }

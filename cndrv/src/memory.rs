@@ -1,4 +1,4 @@
-﻿use crate::{bindings::CNaddr, impl_spore, AsRaw, Blob, ContextGuard, Queue};
+﻿use crate::{bindings::CNaddr, impl_spore, AsRaw, Blob, CurrentCtx, Queue};
 use std::{
     alloc::Layout,
     ffi::c_void,
@@ -64,7 +64,7 @@ impl Queue<'_> {
 
 impl_spore!(DevMem and DevMemSpore by Blob<CNaddr>);
 
-impl ContextGuard<'_> {
+impl CurrentCtx {
     pub fn malloc<T: Copy>(&self, len: usize) -> DevMem<'_> {
         let len = Layout::array::<T>(len).unwrap().size();
         let mut ptr = 0;
@@ -134,8 +134,8 @@ impl DevMemSpore {
 
 impl_spore!(HostMem and HostMemSpore by Blob<*mut c_void>);
 
-impl<'ctx> ContextGuard<'ctx> {
-    pub fn malloc_host<T: Copy>(&'ctx self, len: usize) -> HostMem<'ctx> {
+impl CurrentCtx {
+    pub fn malloc_host<T: Copy>(&self, len: usize) -> HostMem {
         let len = Layout::array::<T>(len).unwrap().size();
         let mut ptr = null_mut();
         cndrv!(cnMallocHost(&mut ptr, len as _));

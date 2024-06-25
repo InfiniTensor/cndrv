@@ -1,4 +1,4 @@
-﻿use crate::{bindings::CNcontext, ContextGuard};
+﻿use crate::{bindings::CNcontext, CurrentCtx};
 
 pub trait ContextResource<'ctx> {
     type Spore: ContextSpore<Resource<'ctx> = Self>;
@@ -9,9 +9,9 @@ pub trait ContextResource<'ctx> {
 pub trait ContextSpore: 'static + Send + Sync {
     type Resource<'ctx>: ContextResource<'ctx, Spore = Self>;
 
-    fn sprout<'ctx>(self, ctx: &'ctx ContextGuard) -> Self::Resource<'ctx>;
-    fn sprout_ref<'ctx>(&'ctx self, ctx: &'ctx ContextGuard) -> &Self::Resource<'ctx>;
-    fn sprout_mut<'ctx>(&'ctx mut self, ctx: &'ctx ContextGuard) -> &mut Self::Resource<'ctx>;
+    fn sprout(self, ctx: &CurrentCtx) -> Self::Resource<'_>;
+    fn sprout_ref<'ctx>(&'ctx self, ctx: &'ctx CurrentCtx) -> &Self::Resource<'_>;
+    fn sprout_mut<'ctx>(&'ctx mut self, ctx: &'ctx CurrentCtx) -> &mut Self::Resource<'_>;
 }
 
 #[macro_export]
@@ -42,6 +42,13 @@ macro_rules! impl_spore {
             std::marker::PhantomData<&'ctx ()>,
         );
 
+        impl<'ctx> $resource<'ctx> {
+            #[inline]
+            pub fn ctx(&self) -> &$crate::CurrentCtx {
+                unsafe { $crate::CurrentCtx::from_raw(&self.0.ctx) }
+            }
+        }
+
         #[repr(transparent)]
         pub struct $spore($crate::RawContainer<$kernel>);
 
@@ -51,9 +58,9 @@ macro_rules! impl_spore {
             type Resource<'ctx> = $resource<'ctx>;
 
             #[inline]
-            fn sprout<'ctx>(self, ctx: &'ctx $crate::ContextGuard) -> Self::Resource<'ctx> {
+            fn sprout(self, ctx: &$crate::CurrentCtx) -> Self::Resource<'_> {
                 assert_eq!(self.0.ctx, unsafe {
-                    <$crate::ContextGuard as $crate::AsRaw>::as_raw(ctx)
+                    <$crate::CurrentCtx as $crate::AsRaw>::as_raw(ctx)
                 });
                 let ans = unsafe { std::mem::transmute_copy(&self.0) };
                 std::mem::forget(self);
@@ -61,12 +68,9 @@ macro_rules! impl_spore {
             }
 
             #[inline]
-            fn sprout_ref<'ctx>(
-                &'ctx self,
-                ctx: &'ctx $crate::ContextGuard,
-            ) -> &Self::Resource<'ctx> {
+            fn sprout_ref<'ctx>(&'ctx self, ctx: &'ctx $crate::CurrentCtx) -> &Self::Resource<'_> {
                 assert_eq!(self.0.ctx, unsafe {
-                    <$crate::ContextGuard as $crate::AsRaw>::as_raw(ctx)
+                    <$crate::CurrentCtx as $crate::AsRaw>::as_raw(ctx)
                 });
                 unsafe { std::mem::transmute(&self.0) }
             }
@@ -74,10 +78,10 @@ macro_rules! impl_spore {
             #[inline]
             fn sprout_mut<'ctx>(
                 &'ctx mut self,
-                ctx: &'ctx $crate::ContextGuard,
-            ) -> &mut Self::Resource<'ctx> {
+                ctx: &'ctx $crate::CurrentCtx,
+            ) -> &mut Self::Resource<'_> {
                 assert_eq!(self.0.ctx, unsafe {
-                    <$crate::ContextGuard as $crate::AsRaw>::as_raw(ctx)
+                    <$crate::CurrentCtx as $crate::AsRaw>::as_raw(ctx)
                 });
                 unsafe { std::mem::transmute(&mut self.0) }
             }

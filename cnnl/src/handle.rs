@@ -1,5 +1,5 @@
 ﻿use crate::bindings::cnnlHandle_t;
-use cndrv::{impl_spore, AsRaw, ContextGuard, Queue};
+use cndrv::{impl_spore, AsRaw, CurrentCtx, Queue};
 use std::{marker::PhantomData, ptr::null_mut};
 
 impl_spore!(Cnnl and CnnlSpore by cnnlHandle_t);
@@ -19,9 +19,9 @@ impl AsRaw for Cnnl<'_> {
     }
 }
 
-impl<'ctx> Cnnl<'ctx> {
+impl Cnnl<'_> {
     #[inline]
-    pub fn new(ctx: &'ctx ContextGuard) -> Self {
+    pub fn new(ctx: &CurrentCtx) -> Self {
         let mut handle = null_mut();
         cnnl!(cnnlCreate(&mut handle));
         Self(unsafe { ctx.wrap_raw(handle) }, PhantomData)

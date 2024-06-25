@@ -1,7 +1,7 @@
 [package]
 name = "cndrv"
 description = "Safe Cambricon driver API."
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 authors = ["YdrMaster <ydrml@hotmail.com>"]
 repository = "https://github.com/InfiniTensor/cndrv.git"
@@ -17,4 +17,4 @@ log = "0.4"
 [build-dependencies]
 bindgen.workspace = true
 build-script-cfg.workspace = true
-search-neuware-tools = { version = "0.0.0", path = "../search-neuware-tools" }
+search-neuware-tools = { version = "0.0", path = "../search-neuware-tools" }

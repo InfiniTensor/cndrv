@@ -1,17 +1,20 @@
-﻿use crate::{bindings as cn, AsRaw, Device, RawContainer};
-use std::{ffi::c_uint, marker::PhantomData, ptr::null_mut};
+﻿use crate::{
+    bindings::{CNCtxSched, CNcontext, CNdev},
+    AsRaw, Device, RawContainer,
+};
+use std::{ffi::c_uint, ptr::null_mut};
 
 #[derive(PartialEq, Eq, Hash, Debug)]
 pub struct Context {
-    ctx: cn::CNcontext,
-    dev: cn::CNdev,
+    ctx: CNcontext,
+    dev: CNdev,
     shared: bool,
 }
 
 impl Device {
     #[inline]
     pub fn context(&self) -> Context {
-        const FLAG: c_uint = cn::CNCtxSched::CN_CTX_SCHED_SYNC_AUTO as _;
+        const FLAG: c_uint = CNCtxSched::CN_CTX_SCHED_SYNC_AUTO as _;
         let dev = unsafe { self.as_raw() };
         let mut ctx = null_mut();
         cndrv!(cnCtxCreate(&mut ctx, FLAG, dev));
@@ -50,7 +53,7 @@ unsafe impl Send for Context {}
 unsafe impl Sync for Context {}
 
 impl AsRaw for Context {
-    type Raw = cn::CNcontext;
+    type Raw = CNcontext;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
         self.ctx
@@ -71,46 +74,31 @@ impl Context {
     }
 
     #[inline]
-    pub fn apply<T>(&self, f: impl FnOnce(&ContextGuard) -> T) -> T {
-        f(&self.bound())
+    pub fn apply<T>(&self, f: impl FnOnce(&CurrentCtx) -> T) -> T {
+        let mut current = null_mut();
+        cndrv!(cnCtxGetCurrent(&mut current));
+        cndrv!(cnCtxSetCurrent(self.ctx));
+        let ans = f(&CurrentCtx(self.ctx));
+        cndrv!(cnCtxSetCurrent(current));
+        ans
     }
 }
 
 #[repr(transparent)]
-pub struct ContextGuard<'a>(cn::CNcontext, PhantomData<&'a ()>);
+pub struct CurrentCtx(CNcontext);
 
-impl Context {
-    #[inline]
-    fn bound(&self) -> ContextGuard {
-        cndrv!(cnCtxSetCurrent(self.ctx));
-        ContextGuard(self.ctx, PhantomData)
-    }
-}
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct NoCtxError;
 
-impl Drop for ContextGuard<'_> {
-    #[inline]
-    fn drop(&mut self) {
-        debug_assert_eq!(
-            {
-                let mut current = null_mut();
-                cndrv!(cnCtxGetCurrent(&mut current));
-                current
-            },
-            self.0
-        );
-        cndrv!(cnCtxSetCurrent(null_mut()));
-    }
-}
-
-impl AsRaw for ContextGuard<'_> {
-    type Raw = cn::CNcontext;
+impl AsRaw for CurrentCtx {
+    type Raw = CNcontext;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
         self.0
     }
 }
 
-impl ContextGuard<'_> {
+impl CurrentCtx {
     #[inline]
     pub fn dev(&self) -> Device {
         let mut dev = 0;
@@ -121,6 +109,39 @@ impl ContextGuard<'_> {
     #[inline]
     pub fn synchronize(&self) {
         cndrv!(cnCtxSync());
+    }
+
+    /// 如果存在当前上下文，在当前上下文上执行依赖上下文的操作。
+    #[inline]
+    pub fn apply_current<T>(f: impl FnOnce(&Self) -> T) -> Result<T, NoCtxError> {
+        let mut raw = null_mut();
+        cndrv!(cnCtxGetCurrent(&mut raw));
+        if !raw.is_null() {
+            Ok(f(&Self(raw)))
+        } else {
+            Err(NoCtxError)
+        }
+    }
+
+    /// 直接指定当前上下文，并执行依赖上下文的操作。
+    ///
+    /// # Safety
+    ///
+    /// The `raw` context must be the current pushed context.
+    #[inline]
+    pub unsafe fn apply_current_unchecked<T>(raw: CNcontext, f: impl FnOnce(&Self) -> T) -> T {
+        f(&Self(raw))
+    }
+
+    /// Designates `raw` as the current context.
+    ///
+    /// # Safety
+    ///
+    /// The `raw` context must be the current pushed context.
+    /// Generally, this method only used for [`RawContainer::ctx`] with limited lifetime.
+    #[inline]
+    pub unsafe fn from_raw(raw: &CNcontext) -> &Self {
+        &*(raw as *const _ as *const _)
     }
 
     /// Wrap a raw object in a `RawContainer`.

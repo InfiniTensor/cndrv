@@ -1,20 +1,28 @@
-﻿use crate::bindings::{cnnlDataType_t, cnnlTensorDescriptor_t};
-use digit_layout::DigitLayout;
+﻿use crate::{bindings::cnnlTensorDescriptor_t, DataType};
+use cndrv::AsRaw;
 use std::ptr::null_mut;
 
 #[repr(transparent)]
 pub struct Tensor(cnnlTensorDescriptor_t);
 
+impl AsRaw for Tensor {
+    type Raw = cnnlTensorDescriptor_t;
+    #[inline]
+    unsafe fn as_raw(&self) -> Self::Raw {
+        self.0
+    }
+}
+
 impl Tensor {
     #[inline]
-    pub fn new(dl: DigitLayout, shape: &[i64], strides: &[i64]) -> Self {
+    pub fn new(dt: DataType, shape: &[i64], strides: &[i64]) -> Self {
         assert_eq!(shape.len(), strides.len());
         let mut desc = null_mut();
         cnnl!(cnnlCreateTensorDescriptor(&mut desc));
         cnnl!(cnnlSetTensorDescriptorEx_v2(
             desc,
             cnnlTensorLayout_t::CNNL_LAYOUT_ARRAY,
-            convert_dt(dl),
+            dt.as_raw(),
             shape.len() as _,
             shape.as_ptr(),
             strides.as_ptr(),
@@ -30,30 +38,9 @@ impl Drop for Tensor {
     }
 }
 
-fn convert_dt(dl: DigitLayout) -> cnnlDataType_t {
-    use cnnlDataType_t::*;
-    use digit_layout::types::*;
-    match dl {
-        F16 => CNNL_DTYPE_HALF,
-        BF16 => CNNL_DTYPE_BFLOAT16,
-        F32 => CNNL_DTYPE_FLOAT,
-        F64 => CNNL_DTYPE_DOUBLE,
-        I8 => CNNL_DTYPE_INT8,
-        I16 => CNNL_DTYPE_INT16,
-        I32 => CNNL_DTYPE_INT32,
-        I64 => CNNL_DTYPE_INT64,
-        U8 => CNNL_DTYPE_UINT8,
-        U16 => CNNL_DTYPE_UINT16,
-        U32 => CNNL_DTYPE_UINT32,
-        U64 => CNNL_DTYPE_UINT64,
-        BOOL => CNNL_DTYPE_BOOL,
-        _ => CNNL_DTYPE_INVALID,
-    }
-}
-
 #[test]
 fn test() {
     use digit_layout::types::F16;
-    let _tensor = Tensor::new(F16, &[2, 3, 4], &[12, 4, 1]);
+    let _tensor = Tensor::new(F16.into(), &[2, 3, 4], &[12, 4, 1]);
     println!("test passed");
 }

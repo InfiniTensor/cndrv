@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 #![cfg(detected_neuware)]
+#![deny(warnings)]
 
 #[macro_use]
 #[allow(unused, non_upper_case_globals, non_camel_case_types, non_snake_case)]
@@ -18,10 +19,12 @@ pub mod bindings {
     }
 }
 
+mod data_type;
 mod handle;
 mod tensor;
 mod version;
 
+pub use data_type::DataType;
 pub use handle::{Cnnl, CnnlSpore};
 pub use tensor::Tensor;
 pub use version::Version;

@@ -111,7 +111,7 @@ impl CurrentCtx {
         cndrv!(cnCtxSync());
     }
 
-    /// 如果存在当前上下文，在当前上下文上执行依赖上下文的操作。
+    /// Applies `f` to current context if it exists, otherwise returns `Err(NoCtxError)`.
     #[inline]
     pub fn apply_current<T>(f: impl FnOnce(&Self) -> T) -> Result<T, NoCtxError> {
         let mut raw = null_mut();
@@ -123,11 +123,11 @@ impl CurrentCtx {
         }
     }
 
-    /// 直接指定当前上下文，并执行依赖上下文的操作。
+    /// Designates `raw` as the current context without checking, then applies `f` to the context.
     ///
     /// # Safety
     ///
-    /// The `raw` context must be the current pushed context.
+    /// The `raw` context must be the current pushed context on this thread.
     #[inline]
     pub unsafe fn apply_current_unchecked<T>(raw: CNcontext, f: impl FnOnce(&Self) -> T) -> T {
         f(&Self(raw))
@@ -137,20 +137,20 @@ impl CurrentCtx {
     ///
     /// # Safety
     ///
-    /// The `raw` context must be the current pushed context.
+    /// The `raw` context must be the current pushed context on this thread.
     /// Generally, this method only used for [`RawContainer::ctx`] with limited lifetime.
     #[inline]
     pub unsafe fn from_raw(raw: &CNcontext) -> &Self {
         &*(raw as *const _ as *const _)
     }
 
-    /// Wrap a raw object in a `RawContainer`.
+    /// Wraps a raw object in a `RawContainer`.
     ///
     /// # Safety
     ///
     /// The raw object must be created in this [`Context`].
     #[inline]
-    pub unsafe fn wrap_raw<T>(&self, raw: T) -> RawContainer<T> {
+    pub unsafe fn wrap_raw<T: Unpin>(&self, raw: T) -> RawContainer<T> {
         RawContainer { ctx: self.0, raw }
     }
 }

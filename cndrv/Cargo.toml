@@ -1,7 +1,7 @@
 [package]
 name = "cndrv"
 description = "Safe Cambricon driver API."
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["YdrMaster <ydrml@hotmail.com>"]
 repository = "https://github.com/InfiniTensor/cndrv.git"

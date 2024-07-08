@@ -88,7 +88,7 @@ macro_rules! impl_spore {
                 assert_eq!(self.0.ctx, unsafe {
                     <$crate::CurrentCtx as $crate::AsRaw>::as_raw(ctx)
                 });
-                // Safety: `transmute_copy` + `forget` 是手工实现移动语义。
+                // SAFETY: `transmute_copy` + `forget` 是手工实现移动语义。
                 // `RawContainer`` 具有 `Unpin` 保证它的安全性。
                 let ans = unsafe { std::mem::transmute_copy(&self.0) };
                 std::mem::forget(self);
@@ -100,7 +100,7 @@ macro_rules! impl_spore {
                 assert_eq!(self.0.ctx, unsafe {
                     <$crate::CurrentCtx as $crate::AsRaw>::as_raw(ctx)
                 });
-                // Safety: 资源以引用的形式返回，因此在使用完成后不会释放。
+                // SAFETY: 资源以引用的形式返回，因此在使用完成后不会释放。
                 unsafe { std::mem::transmute(&self.0) }
             }
 
@@ -112,7 +112,7 @@ macro_rules! impl_spore {
                 assert_eq!(self.0.ctx, unsafe {
                     <$crate::CurrentCtx as $crate::AsRaw>::as_raw(ctx)
                 });
-                // Safety: 资源以可变引用的形式返回，因此在使用完成后不会释放。
+                // SAFETY: 资源以可变引用的形式返回，因此在使用完成后不会释放。
                 unsafe { std::mem::transmute(&mut self.0) }
             }
         }
@@ -122,7 +122,7 @@ macro_rules! impl_spore {
 
             #[inline]
             fn sporulate(self) -> Self::Spore {
-                // Safety: `transmute_copy` + `forget` 是手工实现移动语义。
+                // SAFETY: `transmute_copy` + `forget` 是手工实现移动语义。
                 // `RawContainer`` 具有 `Unpin` 保证它的安全性。
                 let s = unsafe { std::mem::transmute_copy(&self.0) };
                 std::mem::forget(self);

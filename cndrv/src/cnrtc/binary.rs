@@ -27,6 +27,7 @@ impl CnrtcBinary {
 
         let options = [
             CString::new("-O3").unwrap(),
+            CString::new("--bang-fatbin-only").unwrap(),
             CString::new(format!("--bang-mlu-arch=mtp_{isa}")).unwrap(),
         ];
         let options = options.iter().map(|s| s.as_ptr()).collect::<Vec<_>>();

@@ -96,3 +96,44 @@ struct Blob<P> {
     ptr: P,
     len: usize,
 }
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(transparent)]
+pub struct MemSize(pub usize);
+
+use std::{ffi::c_int, fmt};
+
+impl fmt::Display for MemSize {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.0 == 0 {
+            write!(f, "0")
+        } else {
+            let zeros = self.0.trailing_zeros();
+            if zeros >= 40 {
+                write!(f, "{}TiB", self.0 >> 40)
+            } else if zeros >= 30 {
+                write!(f, "{}GiB", self.0 >> 30)
+            } else if zeros >= 20 {
+                write!(f, "{}MiB", self.0 >> 20)
+            } else if zeros >= 10 {
+                write!(f, "{}KiB", self.0 >> 10)
+            } else {
+                write!(f, "{}B", self.0)
+            }
+        }
+    }
+}
+
+impl From<c_int> for MemSize {
+    #[inline]
+    fn from(value: c_int) -> Self {
+        Self(value as _)
+    }
+}
+
+impl From<usize> for MemSize {
+    #[inline]
+    fn from(value: usize) -> Self {
+        Self(value)
+    }
+}

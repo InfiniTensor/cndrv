@@ -1,23 +1,32 @@
-﻿use crate::{bindings::CNkernel, AsRaw, Queue};
+﻿use super::module::Module;
+use crate::{
+    bindings::{
+        CNkernel,
+        CNkernel_attribute_enum::{self, *},
+    },
+    AsRaw, MemSize, Queue,
+};
 use std::{
     ffi::{c_void, CStr},
+    marker::PhantomData,
     ptr::null_mut,
 };
 
-use super::module::Module;
+#[repr(transparent)]
+pub struct KernelFn<'m>(CNkernel, PhantomData<&'m ()>);
 
-pub struct KernelFn<'m>(CNkernel, #[allow(unused)] &'m Module<'m>);
-
-impl<'m> Module<'m> {
-    pub fn get_kernel(&'m self, name: impl AsRef<CStr>) -> KernelFn<'m> {
+impl Module<'_> {
+    #[inline]
+    pub fn get_kernel(&self, name: impl AsRef<CStr>) -> KernelFn {
         let name = name.as_ref();
         let mut kernel = null_mut();
         cndrv!(cnModuleGetKernel(self.as_raw(), name.as_ptr(), &mut kernel));
-        KernelFn(kernel, self)
+        KernelFn(kernel, PhantomData)
     }
 }
 
 impl KernelFn<'_> {
+    #[inline]
     pub fn launch(
         &self,
         dimz: u32,
@@ -37,5 +46,37 @@ impl KernelFn<'_> {
             params as _,
             null_mut(),
         ));
+    }
+
+    #[inline]
+    pub fn nram_usage(&self) -> MemSize {
+        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_NRAM_SIZE_BYTES) as _)
+    }
+
+    #[inline]
+    pub fn wram_usage(&self) -> MemSize {
+        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_WEIGHT_RAM_SIZE_BYTES) as _)
+    }
+
+    #[inline]
+    pub fn smem_usage(&self) -> MemSize {
+        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_SHARED_SIZE_BYTES) as _)
+    }
+
+    #[inline]
+    pub fn const_usage(&self) -> MemSize {
+        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_CONST_SIZE_BYTES) as _)
+    }
+
+    #[inline]
+    pub fn binary_version(&self) -> usize {
+        self.get_attribute(CN_KERNEL_ATTRIBUTE_BINARY_VERSION) as _
+    }
+
+    #[inline]
+    fn get_attribute(&self, attr: CNkernel_attribute_enum) -> i64 {
+        let mut value = 0;
+        cndrv!(cnKernelGetAttribute(&mut value, attr, self.0));
+        value
     }
 }

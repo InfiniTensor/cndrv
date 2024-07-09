@@ -5,7 +5,7 @@ impl_spore!(Module and ModuleSpore by CNmodule);
 
 impl CurrentCtx {
     #[inline]
-    pub fn load(&self, bin: CnrtcBinary) -> Module {
+    pub fn load(&self, bin: &CnrtcBinary) -> Module {
         let mut module = null_mut();
         cndrv!(cnModuleLoadFatBinary(bin.as_ptr(), &mut module));
         Module(unsafe { self.wrap_raw(module) }, PhantomData)

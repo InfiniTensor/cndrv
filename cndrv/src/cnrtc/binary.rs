@@ -1,10 +1,14 @@
-﻿use crate::bindings::{cnrtcCompileCode, cnrtcStatus};
+﻿use crate::{
+    bindings::{cnrtcCompileCode, cnrtcStatus},
+    MemSize,
+};
 use std::{
     ffi::{c_int, CString},
     os::raw::c_void,
     ptr::{null, null_mut},
 };
 
+#[repr(transparent)]
 pub struct CnrtcBinary(Vec<u8>);
 
 impl CnrtcBinary {
@@ -52,6 +56,13 @@ impl CnrtcBinary {
             Err(result)
         };
         (ans, log)
+    }
+
+    #[inline]
+    pub fn memory_usage(&self) -> MemSize {
+        let mut bytes = 0;
+        cndrv!(cnModuleQueryFatBinaryMemoryUsage(self.as_ptr(), &mut bytes));
+        MemSize(bytes)
     }
 }
 

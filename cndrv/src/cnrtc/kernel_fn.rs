@@ -2,7 +2,7 @@
 use crate::{
     bindings::{
         CNkernel,
-        CNkernel_attribute_enum::{self, *},
+        CNkernel_attribute::{self, *},
     },
     AsRaw, MemSize, Queue,
 };
@@ -12,6 +12,7 @@ use std::{
     ptr::null_mut,
 };
 
+#[derive(Clone, Copy, Debug)]
 #[repr(transparent)]
 pub struct KernelFn<'m>(CNkernel, PhantomData<&'m ()>);
 
@@ -50,31 +51,35 @@ impl KernelFn<'_> {
 
     #[inline]
     pub fn nram_usage(&self) -> MemSize {
-        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_NRAM_SIZE_BYTES) as _)
+        self.get_attribute(CN_KERNEL_ATTRIBUTE_NRAM_SIZE_BYTES)
+            .into()
     }
 
     #[inline]
     pub fn wram_usage(&self) -> MemSize {
-        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_WEIGHT_RAM_SIZE_BYTES) as _)
+        self.get_attribute(CN_KERNEL_ATTRIBUTE_WEIGHT_RAM_SIZE_BYTES)
+            .into()
     }
 
     #[inline]
     pub fn smem_usage(&self) -> MemSize {
-        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_SHARED_SIZE_BYTES) as _)
+        self.get_attribute(CN_KERNEL_ATTRIBUTE_SHARED_SIZE_BYTES)
+            .into()
     }
 
     #[inline]
     pub fn const_usage(&self) -> MemSize {
-        MemSize(self.get_attribute(CN_KERNEL_ATTRIBUTE_CONST_SIZE_BYTES) as _)
+        self.get_attribute(CN_KERNEL_ATTRIBUTE_CONST_SIZE_BYTES)
+            .into()
     }
 
     #[inline]
-    pub fn binary_version(&self) -> usize {
-        self.get_attribute(CN_KERNEL_ATTRIBUTE_BINARY_VERSION) as _
+    pub fn binary_version(&self) -> i64 {
+        self.get_attribute(CN_KERNEL_ATTRIBUTE_BINARY_VERSION)
     }
 
     #[inline]
-    fn get_attribute(&self, attr: CNkernel_attribute_enum) -> i64 {
+    fn get_attribute(&self, attr: CNkernel_attribute) -> i64 {
         let mut value = 0;
         cndrv!(cnKernelGetAttribute(&mut value, attr, self.0));
         value

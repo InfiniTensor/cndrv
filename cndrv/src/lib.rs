@@ -131,9 +131,9 @@ impl From<c_int> for MemSize {
     }
 }
 
-impl From<usize> for MemSize {
+impl From<i64> for MemSize {
     #[inline]
-    fn from(value: usize) -> Self {
-        Self(value)
+    fn from(value: i64) -> Self {
+        Self(value as _)
     }
 }

@@ -1,4 +1,10 @@
-﻿use crate::{bindings::CNdev, AsRaw, MemSize};
+﻿use crate::{
+    bindings::{
+        CNdev,
+        CNdevice_attribute::{self, *},
+    },
+    AsRaw, MemSize,
+};
 use std::{ffi::c_int, fmt};
 
 #[repr(transparent)]
@@ -65,18 +71,49 @@ impl Device {
 
     #[inline]
     pub fn isa(&self) -> c_int {
-        let mut isa = 0;
-        cndrv!(cnDeviceGetAttribute(
-            &mut isa,
-            CNdevice_attribute::CN_DEVICE_ATTRIBUTE_MLU_ISA_VERSION,
-            self.0,
-        ));
-        isa
+        self.get_attribute(CN_DEVICE_ATTRIBUTE_MLU_ISA_VERSION)
+    }
+
+    #[inline]
+    pub fn core_nram(&self) -> MemSize {
+        self.get_attribute(CN_DEVICE_ATTRIBUTE_NRAM_SIZE_PER_CORE)
+            .into()
+    }
+
+    #[inline]
+    pub fn core_wram(&self) -> MemSize {
+        self.get_attribute(CN_DEVICE_ATTRIBUTE_WEIGHT_RAM_SIZE_PER_CORE)
+            .into()
+    }
+
+    #[inline]
+    pub fn core_local(&self) -> MemSize {
+        self.get_attribute(CN_DEVICE_ATTRIBUTE_LOCAL_MEMORY_SIZE_PER_CORE)
+            .into()
+    }
+
+    #[inline]
+    pub fn cluster_smem(&self) -> MemSize {
+        self.get_attribute(CN_DEVICE_ATTRIBUTE_MAX_SHARED_RAM_SIZE_PER_CLUSTER)
+            .into()
+    }
+
+    #[inline]
+    pub fn const_mem(&self) -> MemSize {
+        self.get_attribute(CN_DEVICE_ATTRIBUTE_TOTAL_CONST_MEMORY_SIZE)
+            .into()
     }
 
     #[inline]
     pub fn info(&self) -> InfoFmt {
         InfoFmt(self)
+    }
+
+    #[inline]
+    fn get_attribute(&self, attr: CNdevice_attribute) -> c_int {
+        let mut val = 0;
+        cndrv!(cnDeviceGetAttribute(&mut val, attr, self.0,));
+        val
     }
 }
 
@@ -84,14 +121,29 @@ pub struct InfoFmt<'a>(&'a Device);
 
 impl fmt::Display for InfoFmt<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
+        writeln!(
             f,
-            "MLU{} ({}: #{}) isa={} | memory={}",
+            "\
+MLU{} ({}: #{})
+  isa = {}
+  memory = {}
+  const = {}
+  core
+    nram = {}
+    wram = {}
+    local = {}
+  cluster
+    smem = {}",
             self.0 .0,
             self.0.name(),
             self.0.uuid(),
             self.0.isa(),
             self.0.total_memory(),
+            self.0.const_mem(),
+            self.0.core_nram(),
+            self.0.core_wram(),
+            self.0.core_local(),
+            self.0.cluster_smem(),
         )
     }
 }

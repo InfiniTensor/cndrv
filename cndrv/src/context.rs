@@ -75,12 +75,22 @@ impl Context {
 
     #[inline]
     pub fn apply<T>(&self, f: impl FnOnce(&CurrentCtx) -> T) -> T {
+        // 先检查当前上下文
         let mut current = null_mut();
         cndrv!(cnCtxGetCurrent(&mut current));
-        cndrv!(cnCtxSetCurrent(self.ctx));
-        let ans = f(&CurrentCtx(self.ctx));
-        cndrv!(cnCtxSetCurrent(current));
-        ans
+        if current == self.ctx {
+            // 当前上下文是目标上下文
+            // 直接执行
+            f(&CurrentCtx(self.ctx))
+        } else {
+            // 当前上下文不是目标上下文
+            // 加载目标上下文
+            cndrv!(cnCtxSetCurrent(self.ctx));
+            let ans = f(&CurrentCtx(self.ctx));
+            // 还原上下文
+            cndrv!(cnCtxSetCurrent(current));
+            ans
+        }
     }
 }
 

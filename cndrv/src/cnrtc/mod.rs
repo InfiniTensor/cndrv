@@ -53,7 +53,7 @@ fn test_behavior() {
 
     if let Some(dev) = crate::Device::fetch() {
         dev.context().apply(|ctx| {
-            use crate::AsRaw;
+            use context_spore::AsRaw;
 
             let name = CString::new("kernel").unwrap();
             let mut module = null_mut();

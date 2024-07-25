@@ -1,7 +1,8 @@
-﻿use crate::{bindings::CNmodule, impl_spore, AsRaw, CnrtcBinary, CurrentCtx};
+﻿use crate::{bindings::CNmodule, CnrtcBinary, CurrentCtx};
+use context_spore::{impl_spore, AsRaw};
 use std::{marker::PhantomData, ptr::null_mut};
 
-impl_spore!(Module and ModuleSpore by CNmodule);
+impl_spore!(Module and ModuleSpore by (CurrentCtx, CNmodule));
 
 impl CurrentCtx {
     #[inline]
@@ -15,7 +16,7 @@ impl CurrentCtx {
 impl Drop for Module<'_> {
     #[inline]
     fn drop(&mut self) {
-        cndrv!(cnModuleUnload(self.0.raw));
+        cndrv!(cnModuleUnload(self.0.rss));
     }
 }
 
@@ -23,6 +24,6 @@ impl AsRaw for Module<'_> {
     type Raw = CNmodule;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.raw
+        self.0.rss
     }
 }

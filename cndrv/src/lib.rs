@@ -30,8 +30,6 @@ pub mod bindings {
     }
 }
 
-mod spore;
-
 /// §4.3 Version Management
 mod version;
 
@@ -68,14 +66,6 @@ mod notifier;
 /// CNRTC
 mod cnrtc;
 
-pub trait AsRaw {
-    type Raw;
-    /// # Safety
-    ///
-    /// The caller must ensure that the returned item is dropped before the original item.
-    unsafe fn as_raw(&self) -> Self::Raw;
-}
-
 #[inline(always)]
 pub fn init() {
     cndrv!(cnInit(0));
@@ -83,13 +73,13 @@ pub fn init() {
 
 pub use cnrtc::CnrtcBinary;
 pub use context::{Context, CurrentCtx, NoCtxError};
+pub use context_spore::{impl_spore, AsRaw, ContextResource, ContextSpore, RawContainer};
 pub use device::Device;
 pub use memory::{
     memcpy_d2d, memcpy_d2h, memcpy_h2d, DevByte, DevMem, DevMemSpore, HostMem, HostMemSpore,
 };
 pub use notifier::{Notifier, NotifierSpore};
 pub use queue::{Queue, QueueSpore};
-pub use spore::{ContextResource, ContextSpore, RawContainer};
 pub use version::{driver_version, library_version, Version};
 
 struct Blob<P> {

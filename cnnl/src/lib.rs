@@ -19,6 +19,8 @@ pub mod bindings {
     }
 }
 
+pub extern crate cndrv;
+
 mod data_type;
 mod handle;
 mod tensor;

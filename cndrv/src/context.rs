@@ -1,7 +1,8 @@
 ﻿use crate::{
     bindings::{CNCtxSched, CNcontext, CNdev},
-    AsRaw, Device, RawContainer,
+    Device,
 };
+use context_spore::{AsRaw, RawContainer};
 use std::{ffi::c_uint, ptr::null_mut};
 
 #[derive(PartialEq, Eq, Hash, Debug)]
@@ -160,8 +161,8 @@ impl CurrentCtx {
     ///
     /// The raw object must be created in this [`Context`].
     #[inline]
-    pub unsafe fn wrap_raw<T: Unpin>(&self, raw: T) -> RawContainer<T> {
-        RawContainer { ctx: self.0, raw }
+    pub unsafe fn wrap_raw<T: Unpin + 'static>(&self, rss: T) -> RawContainer<CNcontext, T> {
+        RawContainer { ctx: self.0, rss }
     }
 }
 

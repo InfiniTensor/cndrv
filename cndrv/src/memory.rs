@@ -1,4 +1,5 @@
-﻿use crate::{bindings::CNaddr, impl_spore, AsRaw, Blob, CurrentCtx, Queue};
+﻿use crate::{bindings::CNaddr, Blob, CurrentCtx, Queue};
+use context_spore::{impl_spore, AsRaw};
 use std::{
     alloc::Layout,
     ffi::c_void,
@@ -62,7 +63,7 @@ impl Queue<'_> {
     }
 }
 
-impl_spore!(DevMem and DevMemSpore by Blob<CNaddr>);
+impl_spore!(DevMem and DevMemSpore by (CurrentCtx, Blob<CNaddr>));
 
 impl CurrentCtx {
     pub fn malloc<T: Copy>(&self, len: usize) -> DevMem<'_> {
@@ -85,7 +86,7 @@ impl CurrentCtx {
 impl Drop for DevMem<'_> {
     #[inline]
     fn drop(&mut self) {
-        cndrv!(cnFree(self.0.raw.ptr));
+        cndrv!(cnFree(self.0.rss.ptr));
     }
 }
 
@@ -93,10 +94,10 @@ impl Deref for DevMem<'_> {
     type Target = [DevByte];
     #[inline]
     fn deref(&self) -> &Self::Target {
-        if self.0.raw.len == 0 {
+        if self.0.rss.len == 0 {
             &[]
         } else {
-            unsafe { from_raw_parts(self.0.raw.ptr as _, self.0.raw.len) }
+            unsafe { from_raw_parts(self.0.rss.ptr as _, self.0.rss.len) }
         }
     }
 }
@@ -104,10 +105,10 @@ impl Deref for DevMem<'_> {
 impl DerefMut for DevMem<'_> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        if self.0.raw.len == 0 {
+        if self.0.rss.len == 0 {
             &mut []
         } else {
-            unsafe { from_raw_parts_mut(self.0.raw.ptr as _, self.0.raw.len) }
+            unsafe { from_raw_parts_mut(self.0.rss.ptr as _, self.0.rss.len) }
         }
     }
 }
@@ -116,23 +117,23 @@ impl AsRaw for DevMemSpore {
     type Raw = CNaddr;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.raw.ptr
+        self.0.rss.ptr
     }
 }
 
 impl DevMemSpore {
     #[inline]
     pub const fn len(&self) -> usize {
-        self.0.raw.len
+        self.0.rss.len
     }
 
     #[inline]
     pub const fn is_empty(&self) -> bool {
-        self.0.raw.len == 0
+        self.0.rss.len == 0
     }
 }
 
-impl_spore!(HostMem and HostMemSpore by Blob<*mut c_void>);
+impl_spore!(HostMem and HostMemSpore by (CurrentCtx, Blob<*mut c_void>));
 
 impl CurrentCtx {
     pub fn malloc_host<T: Copy>(&self, len: usize) -> HostMem {
@@ -146,7 +147,7 @@ impl CurrentCtx {
 impl Drop for HostMem<'_> {
     #[inline]
     fn drop(&mut self) {
-        cndrv!(cnFreeHost(self.0.raw.ptr));
+        cndrv!(cnFreeHost(self.0.rss.ptr));
     }
 }
 
@@ -154,7 +155,7 @@ impl AsRaw for HostMem<'_> {
     type Raw = *mut c_void;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.raw.ptr
+        self.0.rss.ptr
     }
 }
 
@@ -163,14 +164,14 @@ impl Deref for HostMem<'_> {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { from_raw_parts(self.0.raw.ptr.cast(), self.0.raw.len) }
+        unsafe { from_raw_parts(self.0.rss.ptr.cast(), self.0.rss.len) }
     }
 }
 
 impl DerefMut for HostMem<'_> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { from_raw_parts_mut(self.0.raw.ptr.cast(), self.0.raw.len) }
+        unsafe { from_raw_parts_mut(self.0.rss.ptr.cast(), self.0.rss.len) }
     }
 }
 
@@ -179,14 +180,14 @@ impl Deref for HostMemSpore {
 
     #[inline]
     fn deref(&self) -> &Self::Target {
-        unsafe { from_raw_parts(self.0.raw.ptr.cast(), self.0.raw.len) }
+        unsafe { from_raw_parts(self.0.rss.ptr.cast(), self.0.rss.len) }
     }
 }
 
 impl DerefMut for HostMemSpore {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { from_raw_parts_mut(self.0.raw.ptr.cast(), self.0.raw.len) }
+        unsafe { from_raw_parts_mut(self.0.rss.ptr.cast(), self.0.rss.len) }
     }
 }
 

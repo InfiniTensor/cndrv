@@ -4,8 +4,9 @@ use crate::{
         CNkernel,
         CNkernel_attribute::{self, *},
     },
-    AsRaw, MemSize, Queue,
+    MemSize, Queue,
 };
+use context_spore::AsRaw;
 use std::{
     ffi::{c_void, CStr},
     marker::PhantomData,

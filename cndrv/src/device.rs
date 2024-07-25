@@ -3,8 +3,9 @@
         CNdev,
         CNdevice_attribute::{self, *},
     },
-    AsRaw, MemSize,
+    MemSize,
 };
+use context_spore::AsRaw;
 use std::{ffi::c_int, fmt};
 
 #[repr(transparent)]

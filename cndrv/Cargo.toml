@@ -12,6 +12,7 @@ keywords = ["cambricon", "mlu", "neuware", "cndrv", "cnrtc"]
 categories = ["hardware-support"]
 
 [dependencies]
+context-spore = "0.0"
 log = "0.4"
 
 [build-dependencies]

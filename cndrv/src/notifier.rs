@@ -1,7 +1,8 @@
-﻿use crate::{bindings::CNnotifier, impl_spore, AsRaw, Queue};
+﻿use crate::{bindings::CNnotifier, CurrentCtx, Queue};
+use context_spore::{impl_spore, AsRaw};
 use std::{marker::PhantomData, ptr::null_mut, time::Duration};
 
-impl_spore!(Notifier and NotifierSpore by CNnotifier);
+impl_spore!(Notifier and NotifierSpore by (CurrentCtx, CNnotifier));
 
 impl<'ctx> Queue<'ctx> {
     pub fn record(&self) -> Notifier<'ctx> {
@@ -18,7 +19,7 @@ impl<'ctx> Queue<'ctx> {
 impl Drop for Notifier<'_> {
     #[inline]
     fn drop(&mut self) {
-        cndrv!(cnDestroyNotifier(self.0.raw));
+        cndrv!(cnDestroyNotifier(self.0.rss));
     }
 }
 
@@ -26,7 +27,7 @@ impl AsRaw for Notifier<'_> {
     type Raw = CNnotifier;
     #[inline]
     unsafe fn as_raw(&self) -> Self::Raw {
-        self.0.raw
+        self.0.rss
     }
 }
 
@@ -48,13 +49,13 @@ impl Queue<'_> {
 impl Notifier<'_> {
     #[inline]
     pub fn synchronize(&self) {
-        cndrv!(cnWaitNotifier(self.0.raw));
+        cndrv!(cnWaitNotifier(self.0.rss));
     }
 
     #[inline]
     pub fn elapse_from(&self, start: &Self) -> Duration {
         let mut ms = 0.0;
-        cndrv!(cnNotifierElapsedTime(&mut ms, start.0.raw, self.0.raw));
+        cndrv!(cnNotifierElapsedTime(&mut ms, start.0.rss, self.0.rss));
         Duration::from_secs_f32(ms * 1e-3)
     }
 }

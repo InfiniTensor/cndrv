@@ -1,4 +1,4 @@
-﻿#![doc = include_str!("../README.md")]
+#![doc = include_str!("../README.md")]
 #![cfg(detected_neuware)]
 #![deny(warnings)]
 
@@ -81,11 +81,6 @@ pub use memory::{
 pub use notifier::{Notifier, NotifierSpore};
 pub use queue::{Queue, QueueSpore};
 pub use version::{driver_version, library_version, Version};
-
-struct Blob<P> {
-    ptr: P,
-    len: usize,
-}
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(transparent)]

@@ -1,4 +1,4 @@
-﻿use crate::{bindings::CNaddr, Blob, CurrentCtx, Queue};
+﻿use crate::{bindings::CNaddr, CurrentCtx, Queue};
 use context_spore::{impl_spore, AsRaw};
 use std::{
     alloc::Layout,
@@ -61,6 +61,11 @@ impl Queue<'_> {
             self.as_raw()
         ));
     }
+}
+
+struct Blob<P> {
+    ptr: P,
+    len: usize,
 }
 
 impl_spore!(DevMem and DevMemSpore by (CurrentCtx, Blob<CNaddr>));

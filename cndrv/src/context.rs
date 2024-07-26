@@ -161,7 +161,7 @@ impl CurrentCtx {
     ///
     /// The raw object must be created in this [`Context`].
     #[inline]
-    pub unsafe fn wrap_raw<T: Unpin + 'static>(&self, rss: T) -> RawContainer<CNcontext, T> {
+    pub unsafe fn wrap_raw<T: Unpin>(&self, rss: T) -> RawContainer<CNcontext, T> {
         RawContainer { ctx: self.0, rss }
     }
 }

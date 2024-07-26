@@ -34,15 +34,6 @@ impl Device {
         Self(device)
     }
 
-    #[inline]
-    pub fn fetch() -> Option<Self> {
-        if Self::count() > 0 {
-            Some(Self::new(0))
-        } else {
-            None
-        }
-    }
-
     pub fn name(&self) -> String {
         let mut name = [0u8; 256];
         cndrv!(cnDeviceGetName(

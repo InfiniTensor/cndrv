@@ -194,11 +194,8 @@ impl DerefMut for HostMemSpore {
 #[test]
 fn test_behavior() {
     crate::init();
-    let Some(dev) = crate::Device::fetch() else {
-        return;
-    };
     let mut ptr = null_mut();
-    dev.context().apply(|_| {
+    crate::Device::new(0).context().apply(|_| {
         cndrv!(cnMallocHost(&mut ptr, 128));
         cndrv!(cnFreeHost(ptr));
     });

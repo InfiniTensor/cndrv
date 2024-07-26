@@ -14,9 +14,7 @@ fn test_behavior() {
     const CODE: &str = r#"extern "C" __mlu_entry__ void kernel() { printf("Hello from MLU!\n"); }"#;
 
     crate::init();
-    let Some(dev) = crate::Device::fetch() else {
-        return;
-    };
+    let dev = crate::Device::new(0);
 
     let binary = {
         let src = CString::new(CODE).unwrap();
@@ -51,34 +49,32 @@ fn test_behavior() {
         bin
     };
 
-    if let Some(dev) = crate::Device::fetch() {
-        dev.context().apply(|ctx| {
-            use context_spore::AsRaw;
+    dev.context().apply(|ctx| {
+        use context_spore::AsRaw;
 
-            let name = CString::new("kernel").unwrap();
-            let mut module = null_mut();
-            let mut kernel = null_mut();
-            cndrv!(cnModuleLoadFatBinary(binary.as_ptr().cast(), &mut module));
-            cndrv!(cnModuleGetKernel(module, name.as_ptr(), &mut kernel));
+        let name = CString::new("kernel").unwrap();
+        let mut module = null_mut();
+        let mut kernel = null_mut();
+        cndrv!(cnModuleLoadFatBinary(binary.as_ptr().cast(), &mut module));
+        cndrv!(cnModuleGetKernel(module, name.as_ptr(), &mut kernel));
 
-            {
-                let queue = ctx.queue();
-                cndrv!(cnInvokeKernel(
-                    kernel,
-                    1,
-                    1,
-                    1,
-                    cn_kernel_class::CN_KERNEL_CLASS_BLOCK,
-                    0,
-                    queue.as_raw(),
-                    null_mut(),
-                    null_mut()
-                ));
-            }
+        {
+            let queue = ctx.queue();
+            cndrv!(cnInvokeKernel(
+                kernel,
+                1,
+                1,
+                1,
+                cn_kernel_class::CN_KERNEL_CLASS_BLOCK,
+                0,
+                queue.as_raw(),
+                null_mut(),
+                null_mut()
+            ));
+        }
 
-            cndrv!(cnModuleUnload(module));
-        });
-    };
+        cndrv!(cnModuleUnload(module));
+    });
 }
 
 #[test]
@@ -105,9 +101,7 @@ extern "C" __mlu_entry__ void kernel(
     );
 
     crate::init();
-    let Some(dev) = crate::Device::fetch() else {
-        return;
-    };
+    let dev = crate::Device::new(0);
 
     let (result, log) = CnrtcBinary::compile(src, dev.isa());
     if !log.is_empty() {
@@ -119,31 +113,29 @@ extern "C" __mlu_entry__ void kernel(
     let b = vec![2.0f32; N];
     let mut c = vec![0.0f32; N];
 
-    if let Some(dev) = crate::Device::fetch() {
-        dev.context().apply(|ctx| {
-            let mut lhs = ctx.malloc::<f32>(N);
-            let mut rhs = ctx.malloc::<f32>(N);
-            let mut ans = ctx.malloc::<f32>(N);
+    dev.context().apply(|ctx| {
+        let mut lhs = ctx.malloc::<f32>(N);
+        let mut rhs = ctx.malloc::<f32>(N);
+        let mut ans = ctx.malloc::<f32>(N);
 
-            let queue = ctx.queue();
-            queue.memcpy_h2d(&mut lhs, &a);
-            queue.memcpy_h2d(&mut rhs, &b);
+        let queue = ctx.queue();
+        queue.memcpy_h2d(&mut lhs, &a);
+        queue.memcpy_h2d(&mut rhs, &b);
 
-            let lhs_ptr = lhs.as_ptr();
-            let rhs_ptr = rhs.as_ptr();
-            let ans_ptr = ans.as_mut_ptr();
-            let params: [*const c_void; 3] = [
-                &ans_ptr as *const _ as _,
-                &lhs_ptr as *const _ as _,
-                &rhs_ptr as *const _ as _,
-            ];
+        let lhs_ptr = lhs.as_ptr();
+        let rhs_ptr = rhs.as_ptr();
+        let ans_ptr = ans.as_mut_ptr();
+        let params: [*const c_void; 3] = [
+            &ans_ptr as *const _ as _,
+            &lhs_ptr as *const _ as _,
+            &rhs_ptr as *const _ as _,
+        ];
 
-            ctx.load(&bin)
-                .get_kernel(&CString::new("kernel").unwrap())
-                .launch(1, 1, 1, params.as_ptr() as _, &queue);
+        ctx.load(&bin)
+            .get_kernel(&CString::new("kernel").unwrap())
+            .launch(1, 1, 1, params.as_ptr() as _, &queue);
 
-            memcpy_d2h(&mut c, &ans);
-        });
-        assert_eq!(c, &[3.0f32; N]);
-    };
+        memcpy_d2h(&mut c, &ans);
+    });
+    assert_eq!(c, &[3.0f32; N]);
 }

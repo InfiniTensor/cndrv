@@ -12,7 +12,7 @@ keywords = ["cambricon", "mlu", "neuware", "cnnl"]
 categories = ["hardware-support"]
 
 [dependencies]
-cndrv = { version = "0.1", path = "../cndrv" }
+cndrv = { version = "0.2", path = "../cndrv" }
 digit-layout = "0.0"
 
 [build-dependencies]

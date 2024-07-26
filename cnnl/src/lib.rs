@@ -12,7 +12,7 @@ pub mod bindings {
         ($f:expr) => {{
             #[allow(unused_imports)]
             use $crate::bindings::*;
-            #[allow(unused_unsafe)]
+            #[allow(unused_unsafe, clippy::macro_metavars_in_unsafe)]
             let err = unsafe { $f };
             assert_eq!(err, cnnlStatus_t::CNNL_STATUS_SUCCESS);
         }};

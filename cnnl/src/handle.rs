@@ -36,14 +36,8 @@ impl Cnnl<'_> {
 #[test]
 fn test() {
     cndrv::init();
-
-    let Some(dev) = cndrv::Device::fetch() else {
-        return;
-    };
-
-    dev.acquire_shared().apply(|ctx| {
+    cndrv::Device::new(0).acquire_shared().apply(|ctx| {
         let _cnnl = Cnnl::new(&ctx);
     });
-
     println!("test passed");
 }
